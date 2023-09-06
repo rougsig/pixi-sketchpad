@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js'
 import {FederatedPointerEvent, IDestroyOptions} from 'pixi.js'
 import {StrokeState} from '@/StrokeState'
-import {StrokePoint} from '@/StrokePoint.ts'
+import {StrokePathPoint} from '@/StrokePathPoint.ts'
 import {ObjectPoolFactory} from '@pixi-essentials/object-pool'
 
 export class Stroke extends PIXI.Container {
@@ -44,7 +44,7 @@ export class Stroke extends PIXI.Container {
     }
   }
 
-  private drawStamp(point: StrokePoint): void {
+  private drawStamp(point: StrokePathPoint): void {
     const sprite = this.createSprite(point)
     this.live.addChild(sprite)
     if (this.live.children.length > this.STAMP_LIMIT) {
@@ -54,7 +54,7 @@ export class Stroke extends PIXI.Container {
     }
   }
 
-  private createSprite(point: StrokePoint): PIXI.Sprite {
+  private createSprite(point: StrokePathPoint): PIXI.Sprite {
     const sprite = this.spriteObjectPool.allocate()
     sprite.texture = PIXI.Texture.WHITE
     sprite.x = point.x

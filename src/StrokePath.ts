@@ -1,21 +1,21 @@
 import {lerp} from '@/lerp'
-import {StrokePoint} from '@/StrokePoint'
+import {StrokePathPoint} from '@/StrokePathPoint.ts'
 
 export class StrokePath {
-  private points: Array<StrokePoint> = []
+  private points: Array<StrokePathPoint> = []
 
   constructor() {
   }
 
-  public addPoint(point: StrokePoint): void {
+  public addPoint(point: StrokePathPoint): void {
     this.points.push(point)
   }
 
-  public getPoints(): ReadonlyArray<StrokePoint> {
+  public getPoints(): ReadonlyArray<StrokePathPoint> {
     return this.points
   }
 
-  public getPoint(offset: number): StrokePoint {
+  public getPoint(offset: number): StrokePathPoint {
     if (Number.isInteger(offset)) return this.points[offset]
 
     return this.interpolate(
@@ -29,7 +29,7 @@ export class StrokePath {
     this.points = []
   }
 
-  private interpolate(a: StrokePoint, b: StrokePoint, frac: number): StrokePoint {
+  private interpolate(a: StrokePathPoint, b: StrokePathPoint, frac: number): StrokePathPoint {
     return {
       x: lerp(a.x, b.x, frac),
       y: lerp(a.y, b.y, frac),
