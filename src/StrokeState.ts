@@ -1,6 +1,6 @@
 import {StrokePath} from '@/StrokePath'
 import {FederatedPointerEvent} from 'pixi.js'
-import {createStrokePoint, StrokePathPoint} from '@/StrokePathPoint.ts'
+import {createStrokePoint, StrokePathPoint} from '@/StrokePathPoint'
 
 export class StrokeState {
   private readonly path: StrokePath = new StrokePath()

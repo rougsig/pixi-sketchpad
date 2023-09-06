@@ -14,8 +14,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "pixi.js": "^7.2.4",
-    "@pixi-essentials/object-pool": "^1.0.1"
+    "@pixi-essentials/object-pool": "^1.0.1",
+    "pixi.js": "^7.2.4"
   },
   "peerDependencies": {
     "react": "^18.2.0",

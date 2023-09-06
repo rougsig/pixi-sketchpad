@@ -1,5 +1,5 @@
 import {lerp} from '@/lerp'
-import {StrokePathPoint} from '@/StrokePathPoint.ts'
+import {StrokePathPoint} from '@/StrokePathPoint'
 
 export class StrokePath {
   private points: Array<StrokePathPoint> = []

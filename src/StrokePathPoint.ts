@@ -1,11 +1,11 @@
 import {FederatedPointerEvent} from 'pixi.js'
 
 export type StrokePathPoint = {
-  x: number
-  y: number
-  pressure: number
-  tiltAngle: number
-  tilt: number
+  readonly x: number
+  readonly y: number
+  readonly pressure: number
+  readonly tiltAngle: number
+  readonly tilt: number
 }
 
 export const createStrokePoint = (e: FederatedPointerEvent): StrokePathPoint => ({
