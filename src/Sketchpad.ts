@@ -1,19 +1,15 @@
 import * as PIXI from 'pixi.js'
 import {FederatedPointerEvent} from 'pixi.js'
 import {Cursor} from './Cursor'
-import {StrokeState} from '@/StrokeState.ts'
-import {StrokePoint} from '@/StrokePoint.ts'
+import {Stroke} from '@/Stroke'
 
 export class Sketchpad {
-  private drawingPaper: PIXI.DisplayObject | null = null
-  private strokeState: StrokeState = new StrokeState()
-  private readonly previewContainer = new PIXI.Container()
+  private stroke: Stroke | null = null
   private readonly cursor: Cursor = new Cursor()
 
   constructor(
     private readonly app: PIXI.Application,
   ) {
-    app.stage.addChild(this.previewContainer)
     app.stage.addChild(this.cursor)
     app.stage.eventMode = 'static'
     app.stage.on('pointerdown', this.down)
@@ -21,68 +17,40 @@ export class Sketchpad {
     app.stage.on('pointerup', this.up)
   }
 
+  public setBrushVisibility(isVisible: boolean): void {
+    this.cursor.setVisibility(isVisible)
+  }
+
   public setBrushSize(size: number): void {
     this.cursor.setSize(size)
   }
 
-  public setDrawingPaper(paper: PIXI.DisplayObject | null): void {
-    this.drawingPaper = paper
-    this.cursor.setVisibility(paper != null)
-  }
-
   private readonly down = (e: FederatedPointerEvent): void => {
-    this.strokeState.down(e)
-    this.renderStrokeBegin()
-  }
-
-  private renderStrokeBegin(): void {
-    const point = this.strokeState.getPoint(0)
-    const rect = this.createRect(point)
-    this.previewContainer.addChild(rect)
+    if (this.stroke != null) this.strokeDestroy()
+    this.stroke = new Stroke(this.app.renderer as PIXI.Renderer)
+    this.app.stage.addChild(this.stroke)
+    this.stroke.down(e)
   }
 
   private readonly move = (e: FederatedPointerEvent): void => {
-    if (!this.strokeState.getIsPointerDown()) return
-    this.strokeState.move(e)
-    this.renderStrokeContinue()
-  }
-
-  private renderStrokeContinue(): void {
-    console.log(this.previewContainer.children.length)
-    const lastIndex = this.strokeState.getPathLength() - 1
-    for (let i = lastIndex - 1; i < lastIndex; i += 0.05) {
-      const rect = this.createRect(this.strokeState.getPoint(i))
-      this.previewContainer.addChild(rect)
-    }
+    if (this.stroke == null) return
+    this.stroke.move(e)
   }
 
   private readonly up = (e: FederatedPointerEvent): void => {
-    this.strokeState.up(e)
-    this.renderStrokeEnd()
-    this.strokeState.reset()
-    this.previewContainer.removeChildren()
+    if (this.stroke == null) return
+    this.stroke.up(e)
+    this.strokeDestroy()
   }
 
-  private renderStrokeEnd(): void {
-    const lastIndex = this.strokeState.getPathLength() - 1
-    for (let i = lastIndex - 1; i < lastIndex; i += 0.05) {
-      const rect = this.createRect(this.strokeState.getPoint(i))
-      this.previewContainer.addChild(rect)
-    }
+  private strokeDestroy(): void {
+    if (this.stroke == null) return
+    this.stroke.destroy({children: true})
+    this.stroke = null
   }
 
   public destroy(): void {
-    this.drawingPaper = null
-  }
-
-  private createRect(point: StrokePoint): PIXI.DisplayObject {
-    const rect = new PIXI.Sprite(PIXI.Texture.WHITE)
-    rect.x = point.x
-    rect.y = point.y
-    rect.width = 32
-    rect.height = 32
-    rect.tint = 'red'
-    rect.anchor.set(0.5)
-    return rect
+    // TODO off all events
+    this.strokeDestroy()
   }
 }

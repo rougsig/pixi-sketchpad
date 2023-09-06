@@ -33,7 +33,7 @@ export const Example: Story = () => {
 
       const sketchpad = new Sketchpad(app)
       sketchpad.setBrushSize(32)
-      sketchpad.setDrawingPaper(sprite)
+      sketchpad.setBrushVisibility(true)
       return () => {
         container.removeChild(view)
         sketchpad.destroy()
