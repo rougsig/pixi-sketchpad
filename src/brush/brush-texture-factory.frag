@@ -6,8 +6,9 @@ uniform float hardness;
 
 void main(){
     vec2 uv = gl_FragCoord.xy / size;
-    float dst = distance(uv, vec2(0.5)) * 2.0;
-    float alpha = pow(max(0.0, 1.0 - dst), 1.01 - hardness);
+
+    float radius = distance(uv, vec2(0.5));
+    float alpha = 1.0 - smoothstep(hardness - 0.5, 0.5, radius);
 
     gl_FragColor = vec4(color, 1.0) * alpha;
 }

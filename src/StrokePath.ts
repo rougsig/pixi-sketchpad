@@ -33,7 +33,7 @@ export class StrokePath {
     return {
       x: lerp(a.x, b.x, frac),
       y: lerp(a.y, b.y, frac),
-      pressure: lerp(a.pressure, b.pressure, frac),
+      force: lerp(a.force, b.force, frac),
       tiltAngle: lerp(a.tiltAngle, b.tiltAngle, frac),
       tilt: lerp(a.tilt, b.tilt, frac),
     }
