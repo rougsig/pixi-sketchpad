@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js'
-import {FederatedPointerEvent, IDestroyOptions} from 'pixi.js'
+import {IDestroyOptions} from 'pixi.js'
+import {PointerEvent} from './event/PointerEvent.ts'
 import {StrokeState} from '@/StrokeState'
 import {StrokePathPoint} from '@/StrokePathPoint'
 import {ObjectPoolFactory} from '@pixi-essentials/object-pool'
@@ -9,74 +10,90 @@ export class Stroke extends PIXI.Container {
   private readonly STAMP_LIMIT = 1024
 
   private readonly live: PIXI.Container<PIXI.Sprite> = new PIXI.Container<PIXI.Sprite>()
+  private readonly debug: PIXI.Container<PIXI.Sprite> = new PIXI.Container<PIXI.Sprite>()
   private readonly state: StrokeState = new StrokeState()
   private readonly spriteObjectPool = ObjectPoolFactory.build(PIXI.Sprite)
 
-  private lastPoint: StrokePathPoint | null = null
+  private distance: number = 0
+  private lastPointOffset: number = 0
 
   constructor(
     private readonly brush: Brush,
+    private readonly debugPointTexture: PIXI.Texture,
     private readonly renderer: PIXI.Renderer,
   ) {
     super()
     this.addChild(this.live)
+    this.addChild(this.debug)
   }
 
-  public down(e: FederatedPointerEvent): void {
+  public down(e: PointerEvent): void {
     this.state.down(e)
-    this.drawPoint(this.state.getPoint(0))
+    this.drawPoint(0)
+    const orig = this.brush.texture
+    this.brush.texture = this.debugPointTexture
+    this.drawPoint(0)
+    this.brush.texture = orig
+    this.distance = 0
   }
 
-  public move(e: FederatedPointerEvent): void {
+  public move(e: PointerEvent): void {
     this.state.move(e)
+    const pathLength = this.state.getPathLength()
+    this.distance += this.calculateDistance(
+      this.state.getPoint(pathLength - 2),
+      this.state.getPoint(pathLength - 1),
+    )
+    const orig = this.brush.texture
+    this.brush.texture = this.debugPointTexture
+    this.drawPoint(pathLength - 1)
+    this.brush.texture = orig
     this.drawLine(this.state.getPathLength() - 1)
   }
 
-  public up(e: FederatedPointerEvent): void {
+  public up(e: PointerEvent): void {
     this.state.up(e)
-    this.drawLine(this.state.getPathLength() - 1)
     // DO STROKE SAVE
     this.cleanup()
   }
 
   private drawLine(to: number): void {
-    const fromPoint = this.lastPoint
-    if (fromPoint == null) return
+    const from = this.lastPointOffset
+    const fromPoint = this.state.getPoint(from)
     const toPoint = this.state.getPoint(to)
-
-    const startSpacing = this.calcBrushSize(fromPoint) * this.brush.spacing
-
-    const dx = fromPoint.x - toPoint.x
-    const dy = fromPoint.y - toPoint.y
-
-    let length = Math.sqrt(dx ** 2 + dy ** 2) - startSpacing
-    let dst = length
-
-    // TODO: draw line without holes...
-    let point = toPoint
-    let i = 0
-    while (dst >= this.calcBrushSize(point) * this.brush.spacing) {
-      this.drawPoint(point)
-      console.log('draw', ++i, dst)
-      dst -= this.calcBrushSize(point) * this.brush.spacing
-      point = this.state.getPoint(to - dst / length)
+    const length = to - from
+    let progress = this.calculateProgress(this.calcBrushSize(fromPoint) * this.brush.spacing, this.distance)
+    let drawn = 0
+    while (progress <= 1) {
+      const offset = from + length * progress
+      const point = this.state.getPoint(offset)
+      this.drawPoint(offset)
+      drawn = this.distance * progress
+      progress += this.calculateProgress(this.calcBrushSize(point) * this.brush.spacing, this.distance)
     }
-
-    // const size = this.calcBrushSize(this.brush, toPoint)
-    // if (dst >= size * this.brush.spacing) {
-    //   const additionalPoints = Math.ceil(dst / size / this.brush.spacing)
-    //   console.log(additionalPoints)
-    //   for (let i = 1; i < additionalPoints; i++) {
-    //     //console.log(to, 1 / additionalPoints * i)
-    //     this.drawPoint(to - 1 / additionalPoints * i)
-    //   }
-    // }
+    this.distance -= drawn
   }
 
-  private drawPoint(point: StrokePathPoint): void {
+  private calculateDistance(a: StrokePathPoint, b: StrokePathPoint): number {
+    const dx = a.x - b.x
+    const dy = a.y - b.y
+    return Math.sqrt(dx ** 2 + dy ** 2)
+  }
+
+  private calculateProgress(value: number, total: number): number {
+    return value / total
+  }
+
+  private drawPoint(offset: number): void {
+    const point = this.state.getPoint(offset)
     const sprite = this.createSprite(point)
-    this.live.addChild(sprite)
-    this.lastPoint = point
+    if (sprite.texture === this.debugPointTexture) {
+      this.debug.addChild(sprite)
+    } else {
+      this.live.addChild(sprite)
+      this.lastPointOffset = offset
+    }
+
 
     if (this.live.children.length > this.STAMP_LIMIT) {
       const snapshot = this.createSnapshot(this.live)
@@ -106,7 +123,8 @@ export class Stroke extends PIXI.Container {
 
     sprite.position.set(point.x, point.y)
     sprite.anchor.set(0.5)
-    sprite.alpha = alpha
+    // sprite.alpha = alpha
+    sprite.alpha = 0.25
     sprite.scale.set(size / brush.size)
 
     return sprite
@@ -131,9 +149,9 @@ export class Stroke extends PIXI.Container {
 
   private cleanup(): void {
     this.state.reset()
-    this.spriteObjectPool.releaseArray(this.live.removeChildren())
-    this.removeChildren()
-    this.addChild(this.live)
+    //this.spriteObjectPool.releaseArray(this.live.removeChildren())
+    //this.removeChildren()
+    //this.addChild(this.live)
   }
 
   public destroy(_options?: IDestroyOptions | boolean): void {

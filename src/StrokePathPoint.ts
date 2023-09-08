@@ -1,4 +1,4 @@
-import {FederatedPointerEvent} from 'pixi.js'
+import {PointerEvent} from './event/PointerEvent.ts'
 
 export type StrokePathPoint = {
   readonly x: number
@@ -8,7 +8,7 @@ export type StrokePathPoint = {
   readonly tilt: number
 }
 
-export const createStrokePoint = (e: FederatedPointerEvent): StrokePathPoint => ({
+export const createStrokePoint = (e: PointerEvent): StrokePathPoint => ({
   x: e.globalX,
   y: e.globalY,
   force: calcPressure(e),
@@ -16,19 +16,19 @@ export const createStrokePoint = (e: FederatedPointerEvent): StrokePathPoint => 
   tiltAngle: calcTiltAngle(e),
 })
 
-const calcPressure = (e: FederatedPointerEvent): number => {
+const calcPressure = (e: PointerEvent): number => {
   return e.pointerType === 'mouse'
     ? e.pressure > 0 ? 0.5 : 0
     : e.pressure
 }
 
-const calcTilt = (e: FederatedPointerEvent): number => {
+const calcTilt = (e: PointerEvent): number => {
   return e.pointerType === 'mouse'
     ? 37
     : Math.max(Math.abs(e.tiltX), Math.abs(e.tiltY))
 }
 
-const calcTiltAngle = (e: FederatedPointerEvent): number => {
+const calcTiltAngle = (e: PointerEvent): number => {
   return e.pointerType === 'mouse'
     ? -90
     : Math.atan2(e.tiltY, e.tiltX) * (180 / Math.PI)

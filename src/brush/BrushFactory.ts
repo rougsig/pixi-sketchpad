@@ -4,7 +4,7 @@ import {BrushTextureFactory} from '@/brush/BrushTextureFactory.ts'
 import {hexToArray} from '@/hexToArray.ts'
 
 export class BrushFactory {
-  private readonly brushTextureFactory: BrushTextureFactory
+  readonly brushTextureFactory: BrushTextureFactory
   private color: number[] = [0, 0, 0]
   private size: number = 0
   private forceSize: number = 0

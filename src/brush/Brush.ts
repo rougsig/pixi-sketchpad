@@ -3,6 +3,7 @@ import * as PIXI from 'pixi.js'
 export type Brush = {
   texture: PIXI.Texture
   spacing: number
+  // add flow logic, it's like alpha, but for brush texture
   alpha: number
   forceAlpha: number
   size: number

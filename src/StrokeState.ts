@@ -1,5 +1,5 @@
 import {StrokePath} from '@/StrokePath'
-import {FederatedPointerEvent} from 'pixi.js'
+import {PointerEvent} from './event/PointerEvent.ts'
 import {createStrokePoint, StrokePathPoint} from '@/StrokePathPoint'
 
 export class StrokeState {
@@ -17,21 +17,25 @@ export class StrokeState {
     return this.path.getPoint(offset)
   }
 
+  public getLastPoint(): StrokePathPoint {
+    return this.getPoint(this.getPathLength() - 1)
+  }
+
   public getPathLength(): number {
     return this.path.getPoints().length
   }
 
-  public down(e: FederatedPointerEvent): void {
+  public down(e: PointerEvent): void {
     this.isPointerDown = true
     this.path.addPoint(createStrokePoint(e))
   }
 
-  public move(e: FederatedPointerEvent): void {
+  public move(e: PointerEvent): void {
     if (!this.isPointerDown) return
     this.path.addPoint(createStrokePoint(e))
   }
 
-  public up(e: FederatedPointerEvent): void {
+  public up(e: PointerEvent): void {
     this.path.addPoint(createStrokePoint(e))
     this.isPointerDown = false
   }

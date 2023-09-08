@@ -25,6 +25,7 @@ export const Example: Story = () => {
     if (container != null) {
       container.appendChild(view)
       const sprite = new PIXI.Sprite(PIXI.Texture.WHITE)
+      sprite.name = 'root'
       sprite.width = 512
       sprite.height = 512
       sprite.x = 128
