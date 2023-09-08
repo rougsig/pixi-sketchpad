@@ -16,13 +16,13 @@ export class Sketchpad {
     private readonly app: PIXI.Application,
   ) {
     this.brushFactory = new BrushFactory(app.renderer as PIXI.Renderer)
-    this.brushFactory.setColor('#ff0000')
+    this.brushFactory.setColor('#000000')
     this.brushFactory.setSize(32)
-    this.brushFactory.setForceSize(0)
+    this.brushFactory.setForceSize(0.999)
     this.brushFactory.setAlpha(1)
-    this.brushFactory.setForceAlpha(0)
-    this.brushFactory.setHardness(1)
-    this.brushFactory.setSpacing(1)
+    this.brushFactory.setForceAlpha(0.999)
+    this.brushFactory.setHardness(0.5)
+    this.brushFactory.setSpacing(0.01)
     this.debugPointTexture = this.brushFactory.brushTextureFactory.create({size: 8, color: [0, 0, 0], hardness: 1})
 
     this.brush = this.brushFactory.create()
@@ -35,11 +35,6 @@ export class Sketchpad {
     root.on('pointerdown', this.down)
     root.on('globalpointermove', this.move)
     root.on('pointerup', this.up)
-
-    this.down(this.fakeEvent(256, 256))
-    this.move(this.fakeEvent(256, 256))
-    this.move(this.fakeEvent(256 + 32 * 8, 256))
-    this.up(this.fakeEvent(0, 0))
   }
 
   private fakeEvent(x: number, y: number): PointerEvent {
@@ -47,7 +42,7 @@ export class Sketchpad {
   }
 
   private readonly down = (e: PointerEvent): void => {
-    console.log('down', e.globalX, e.globalY)
+    console.log('down', e.globalX, e.globalY, e.tiltX, e.tiltY, e.pressure, e.pointerType)
     if (this.stroke != null) this.strokeDestroy()
     this.stroke = new Stroke(
       this.brush,
@@ -60,13 +55,13 @@ export class Sketchpad {
 
   private readonly move = (e: PointerEvent): void => {
     if (this.stroke == null) return
-    console.log('move', e.globalX, e.globalY)
+    console.log('move', e.globalX, e.globalY, e.tiltX, e.tiltY, e.pressure, e.pointerType)
     this.stroke.move(e)
   }
 
   private readonly up = (e: PointerEvent): void => {
     if (this.stroke == null) return
-    console.log('up', e.globalX, e.globalY)
+    console.log('up', e.globalX, e.globalY, e.tiltX, e.tiltY, e.pressure, e.pointerType)
     this.stroke.up(e)
     this.strokeDestroy()
   }

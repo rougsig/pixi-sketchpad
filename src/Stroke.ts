@@ -5,6 +5,7 @@ import {StrokeState} from '@/StrokeState'
 import {StrokePathPoint} from '@/StrokePathPoint'
 import {ObjectPoolFactory} from '@pixi-essentials/object-pool'
 import {Brush} from '@/brush/Brush'
+import {StrokePath} from '@/StrokePath.ts'
 
 export class Stroke extends PIXI.Container {
   private readonly STAMP_LIMIT = 1024
@@ -14,8 +15,8 @@ export class Stroke extends PIXI.Container {
   private readonly state: StrokeState = new StrokeState()
   private readonly spriteObjectPool = ObjectPoolFactory.build(PIXI.Sprite)
 
-  private distance: number = 0
-  private lastPointOffset: number = 0
+  private lastDrawnPoint: StrokePathPoint | null = null
+  private pointerDistance: number = 0
 
   constructor(
     private readonly brush: Brush,
@@ -34,13 +35,15 @@ export class Stroke extends PIXI.Container {
     this.brush.texture = this.debugPointTexture
     this.drawPoint(0)
     this.brush.texture = orig
-    this.distance = 0
+
+    this.pointerDistance = 0
+    this.lastDrawnPoint = this.state.getPoint(0)
   }
 
   public move(e: PointerEvent): void {
     this.state.move(e)
     const pathLength = this.state.getPathLength()
-    this.distance += this.calculateDistance(
+    this.pointerDistance += this.calculateDistance(
       this.state.getPoint(pathLength - 2),
       this.state.getPoint(pathLength - 1),
     )
@@ -55,23 +58,26 @@ export class Stroke extends PIXI.Container {
     this.state.up(e)
     // DO STROKE SAVE
     this.cleanup()
+    this.lastDrawnPoint = null
+    this.pointerDistance = 0
   }
 
   private drawLine(to: number): void {
-    const from = this.lastPointOffset
-    const fromPoint = this.state.getPoint(from)
+    const fromPoint = this.lastDrawnPoint
+    if (fromPoint == null) return
     const toPoint = this.state.getPoint(to)
-    const length = to - from
-    let progress = this.calculateProgress(this.calcBrushSize(fromPoint) * this.brush.spacing, this.distance)
+    const tempPath = new StrokePath()
+    tempPath.addPoint(fromPoint)
+    tempPath.addPoint(toPoint)
+    let progress = this.calculateProgress(this.calcBrushSize(fromPoint) * this.brush.spacing, this.pointerDistance)
     let drawn = 0
     while (progress <= 1) {
-      const offset = from + length * progress
-      const point = this.state.getPoint(offset)
-      this.drawPoint(offset)
-      drawn = this.distance * progress
-      progress += this.calculateProgress(this.calcBrushSize(point) * this.brush.spacing, this.distance)
+      const point = tempPath.getPoint(progress)
+      this.drawPoint(point)
+      drawn = this.pointerDistance * progress
+      progress += this.calculateProgress(this.calcBrushSize(point) * this.brush.spacing, this.pointerDistance)
     }
-    this.distance -= drawn
+    this.pointerDistance -= drawn
   }
 
   private calculateDistance(a: StrokePathPoint, b: StrokePathPoint): number {
@@ -84,16 +90,15 @@ export class Stroke extends PIXI.Container {
     return value / total
   }
 
-  private drawPoint(offset: number): void {
-    const point = this.state.getPoint(offset)
+  private drawPoint(offset: number | StrokePathPoint): void {
+    const point = typeof offset === 'number' ? this.state.getPoint(offset) : offset
     const sprite = this.createSprite(point)
     if (sprite.texture === this.debugPointTexture) {
       this.debug.addChild(sprite)
     } else {
       this.live.addChild(sprite)
-      this.lastPointOffset = offset
+      this.lastDrawnPoint = point
     }
-
 
     if (this.live.children.length > this.STAMP_LIMIT) {
       const snapshot = this.createSnapshot(this.live)
@@ -123,8 +128,7 @@ export class Stroke extends PIXI.Container {
 
     sprite.position.set(point.x, point.y)
     sprite.anchor.set(0.5)
-    // sprite.alpha = alpha
-    sprite.alpha = 0.25
+    sprite.alpha = alpha
     sprite.scale.set(size / brush.size)
 
     return sprite
