@@ -16,7 +16,6 @@ export class BrushTextureFactory {
   }
 
   public create(config: BrushTextureConfig): PIXI.Texture {
-    this.filter.uniforms.size = config.size
     this.filter.uniforms.color = config.color
     this.filter.uniforms.hardness = config.hardness
 
