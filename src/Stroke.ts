@@ -3,7 +3,7 @@ import {IDestroyOptions} from 'pixi.js'
 import {ObjectPoolFactory} from '@pixi-essentials/object-pool'
 import {Brush} from '@/Brush'
 import {lerp} from '@/lerp'
-import {distance} from '@/distance.ts'
+import {distance} from '@/distance'
 
 export class Stroke extends PIXI.Container {
   private readonly STAMP_LIMIT = 1024
