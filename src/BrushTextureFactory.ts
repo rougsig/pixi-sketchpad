@@ -1,6 +1,5 @@
 import * as PIXI from 'pixi.js'
 import frag from './brush-texture-factory.frag?raw'
-import {BrushTextureConfig} from '@/brush/BrushTextureConfig'
 
 export class BrushTextureFactory {
   private readonly sprite: PIXI.Sprite
@@ -15,13 +14,12 @@ export class BrushTextureFactory {
     this.sprite.filters = [this.filter]
   }
 
-  public create(config: BrushTextureConfig): PIXI.Texture {
-    this.filter.uniforms.color = config.color
-    this.filter.uniforms.hardness = config.hardness
+  public create(size: number, hardness: number): PIXI.Texture {
+    this.filter.uniforms.hardness = hardness
 
-    const texture = PIXI.RenderTexture.create({width: config.size, height: config.size})
-    this.sprite.width = config.size
-    this.sprite.height = config.size
+    const texture = PIXI.RenderTexture.create({width: size, height: size})
+    this.sprite.width = size
+    this.sprite.height = size
     this.renderer.render(this.sprite, {renderTexture: texture})
 
     return texture

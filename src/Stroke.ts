@@ -1,137 +1,92 @@
 import * as PIXI from 'pixi.js'
 import {IDestroyOptions} from 'pixi.js'
-import {PointerEvent} from './event/PointerEvent.ts'
-import {StrokeState} from '@/StrokeState'
-import {StrokePathPoint} from '@/StrokePathPoint'
 import {ObjectPoolFactory} from '@pixi-essentials/object-pool'
-import {Brush} from '@/brush/Brush'
-import {StrokePath} from '@/StrokePath.ts'
+import {Brush} from '@/Brush'
+import {lerp} from '@/lerp'
+import {distance} from '@/distance.ts'
 
 export class Stroke extends PIXI.Container {
   private readonly STAMP_LIMIT = 1024
 
   private readonly live: PIXI.Container<PIXI.Sprite> = new PIXI.Container<PIXI.Sprite>()
-  private readonly debug: PIXI.Container<PIXI.Sprite> = new PIXI.Container<PIXI.Sprite>()
-  private readonly state: StrokeState = new StrokeState()
   private readonly spriteObjectPool = ObjectPoolFactory.build(PIXI.Sprite)
-
-  private lastDrawnPoint: StrokePathPoint | null = null
-  private pointerDistance: number = 0
 
   constructor(
     private readonly brush: Brush,
-    private readonly debugPointTexture: PIXI.Texture,
+    private readonly color: string,
     private readonly renderer: PIXI.Renderer,
   ) {
     super()
     this.addChild(this.live)
-    this.addChild(this.debug)
   }
 
-  public down(e: PointerEvent): void {
-    this.state.down(e)
-    this.drawPoint(0)
-    const orig = this.brush.texture
-    this.brush.texture = this.debugPointTexture
-    this.drawPoint(0)
-    this.brush.texture = orig
+  private lastX: number = 0
+  private lastY: number = 0
+  private lastPressure: number = 0
 
-    this.pointerDistance = 0
-    this.lastDrawnPoint = this.state.getPoint(0)
+  public startStroke(x: number, y: number, pressure: number): void {
+    this.drawStamp(x, y, pressure)
+
+    this.lastX = x
+    this.lastY = y
+    this.lastPressure = pressure
   }
 
-  public move(e: PointerEvent): void {
-    this.state.move(e)
-    const pathLength = this.state.getPathLength()
-    this.pointerDistance += this.calculateDistance(
-      this.state.getPoint(pathLength - 2),
-      this.state.getPoint(pathLength - 1),
-    )
-    const orig = this.brush.texture
-    this.brush.texture = this.debugPointTexture
-    this.drawPoint(pathLength - 1)
-    this.brush.texture = orig
-    this.drawLine(this.state.getPathLength() - 1)
-  }
+  public continueStroke(x: number, y: number, pressure: number): void {
+    const dist = distance(this.lastX, this.lastY, x, y)
+    const spacing = this.brush.getPressureSpacing(this.lastPressure)
 
-  public up(e: PointerEvent): void {
-    this.state.up(e)
-    // DO STROKE SAVE
-    this.cleanup()
-    this.lastDrawnPoint = null
-    this.pointerDistance = 0
-  }
+    if (dist >= spacing) {
+      const df = spacing / dist
 
-  private drawLine(to: number): void {
-    const fromPoint = this.lastDrawnPoint
-    if (fromPoint == null) return
-    const toPoint = this.state.getPoint(to)
-    const tempPath = new StrokePath()
-    tempPath.addPoint(fromPoint)
-    tempPath.addPoint(toPoint)
-    let progress = this.calculateProgress(this.calcBrushSize(fromPoint) * this.brush.spacing, this.pointerDistance)
-    let drawn = 0
-    while (progress <= 1) {
-      const point = tempPath.getPoint(progress)
-      this.drawPoint(point)
-      drawn = this.pointerDistance * progress
-      progress += this.calculateProgress(this.calcBrushSize(point) * this.brush.spacing, this.pointerDistance)
+      let nx = this.lastX
+      let ny = this.lastY
+      let np = this.lastPressure
+
+      for (let f = df; f < 1.0; f += df) {
+        nx = lerp(this.lastX, x, f)
+        ny = lerp(this.lastY, y, f)
+        np = lerp(this.lastPressure, pressure, f)
+        this.drawStamp(nx, ny, np)
+      }
+
+      this.lastX = nx
+      this.lastY = ny
+      this.lastPressure = np
     }
-    this.pointerDistance -= drawn
   }
 
-  private calculateDistance(a: StrokePathPoint, b: StrokePathPoint): number {
-    const dx = a.x - b.x
-    const dy = a.y - b.y
-    return Math.sqrt(dx ** 2 + dy ** 2)
+  public endStroke(x: number, y: number, pressure: number): void {
+    this.lastX = x
+    this.lastY = y
+    this.lastPressure = pressure
   }
 
-  private calculateProgress(value: number, total: number): number {
-    return value / total
-  }
+  private drawStamp(x: number, y: number, pressure: number): void {
+    const sprite = this.spriteObjectPool.allocate()
 
-  private drawPoint(offset: number | StrokePathPoint): void {
-    const point = typeof offset === 'number' ? this.state.getPoint(offset) : offset
-    const sprite = this.createSprite(point)
-    if (sprite.texture === this.debugPointTexture) {
-      this.debug.addChild(sprite)
-    } else {
-      this.live.addChild(sprite)
-      this.lastDrawnPoint = point
-    }
+    sprite.texture = this.brush.texture
+    sprite.width = this.brush.size
+    sprite.height = this.brush.size
+
+    sprite.tint = this.color
+
+    const alpha = this.brush.getPressureAlpha(pressure)
+    sprite.alpha = alpha
+
+    sprite.position.set(x, y)
+    sprite.anchor.set(0.5)
+
+    const size = this.brush.getPressureSize(pressure)
+    sprite.scale.set(size / this.brush.size)
+
+    this.live.addChild(sprite)
 
     if (this.live.children.length > this.STAMP_LIMIT) {
       const snapshot = this.createSnapshot(this.live)
       this.spriteObjectPool.releaseArray(this.live.removeChildren())
       this.addChild(snapshot)
     }
-  }
-
-  private calcBrushSize(point: StrokePathPoint): number {
-    return this.brush.size - (1 - point.force) * this.brush.size * this.brush.forceSize
-  }
-
-  private calcBrushAlpha(point: StrokePathPoint): number {
-    return 1 - (1 - point.force) * this.brush.forceAlpha
-  }
-
-  private createSprite(point: StrokePathPoint): PIXI.Sprite {
-    const brush = this.brush
-
-    const sprite = this.spriteObjectPool.allocate()
-    sprite.texture = brush.texture
-    sprite.width = brush.size
-    sprite.height = brush.size
-
-    const size = this.calcBrushSize(point)
-    const alpha = this.calcBrushAlpha(point)
-
-    sprite.position.set(point.x, point.y)
-    sprite.anchor.set(0.5)
-    sprite.alpha = alpha
-    sprite.scale.set(size / brush.size)
-
-    return sprite
   }
 
   private createSnapshot(container: PIXI.Container): PIXI.Sprite {
@@ -152,10 +107,7 @@ export class Stroke extends PIXI.Container {
   }
 
   private cleanup(): void {
-    this.state.reset()
-    //this.spriteObjectPool.releaseArray(this.live.removeChildren())
-    //this.removeChildren()
-    //this.addChild(this.live)
+    this.spriteObjectPool.releaseArray(this.live.removeChildren())
   }
 
   public destroy(_options?: IDestroyOptions | boolean): void {
