@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js'
 import {IDestroyOptions} from 'pixi.js'
 import {ObjectPoolFactory} from '@pixi-essentials/object-pool'
 import {Brush} from '@/Brush'
+import {PointerEvent} from '@/PointerEvent'
 import {lerp} from '@/lerp'
 import {distance} from '@/distance'
 
@@ -20,49 +21,36 @@ export class Stroke extends PIXI.Container {
     this.addChild(this.live)
   }
 
-  private lastX: number = 0
-  private lastY: number = 0
-  private lastPressure: number = 0
+  private lastEvent: PointerEvent = new PointerEvent(0, 0, 0)
 
-  public startStroke(x: number, y: number, pressure: number): void {
-    this.drawStamp(x, y, pressure)
+  public startStroke(e: PointerEvent): void {
+    this.drawStamp(e)
 
-    this.lastX = x
-    this.lastY = y
-    this.lastPressure = pressure
+    this.lastEvent = e
   }
 
-  public continueStroke(x: number, y: number, pressure: number): void {
-    const dist = distance(this.lastX, this.lastY, x, y)
-    const spacing = this.brush.getPressureSpacing(this.lastPressure)
+  public continueStroke(e: PointerEvent): void {
+    const dist = distance(this.lastEvent.x, this.lastEvent.y, e.x, e.y)
+    const spacing = this.brush.getPressureSpacing(this.lastEvent.pressure)
 
     if (dist >= spacing) {
       const df = spacing / dist
-
-      let nx = this.lastX
-      let ny = this.lastY
-      let np = this.lastPressure
-
+      const lerpEvent = new PointerEvent(0, 0, 0)
       for (let f = df; f < 1.0; f += df) {
-        nx = lerp(this.lastX, x, f)
-        ny = lerp(this.lastY, y, f)
-        np = lerp(this.lastPressure, pressure, f)
-        this.drawStamp(nx, ny, np)
+        lerpEvent.x = lerp(this.lastEvent.x, e.x, f)
+        lerpEvent.y = lerp(this.lastEvent.y, e.y, f)
+        lerpEvent.pressure = lerp(this.lastEvent.pressure, e.pressure, f)
+        this.drawStamp(lerpEvent)
       }
-
-      this.lastX = nx
-      this.lastY = ny
-      this.lastPressure = np
+      this.lastEvent = lerpEvent
     }
   }
 
-  public endStroke(x: number, y: number, pressure: number): void {
-    this.lastX = x
-    this.lastY = y
-    this.lastPressure = pressure
+  public endStroke(e: PointerEvent): void {
+    this.lastEvent = e
   }
 
-  private drawStamp(x: number, y: number, pressure: number): void {
+  private drawStamp(e: PointerEvent): void {
     const sprite = this.spriteObjectPool.allocate()
 
     sprite.texture = this.brush.texture
@@ -70,15 +58,11 @@ export class Stroke extends PIXI.Container {
     sprite.height = this.brush.size
 
     sprite.tint = this.color
+    sprite.alpha = this.brush.getPressureAlpha(e.pressure)
 
-    const alpha = this.brush.getPressureAlpha(pressure)
-    sprite.alpha = alpha
-
-    sprite.position.set(x, y)
+    sprite.position.set(e.x, e.y)
     sprite.anchor.set(0.5)
-
-    const size = this.brush.getPressureSize(pressure)
-    sprite.scale.set(size / this.brush.size)
+    sprite.scale.set(this.brush.getPressureSize(e.pressure) / this.brush.size)
 
     this.live.addChild(sprite)
 
