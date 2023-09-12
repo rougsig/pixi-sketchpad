@@ -1,10 +1,8 @@
 import * as PIXI from 'pixi.js'
-import {IDestroyOptions} from 'pixi.js'
 import {ObjectPoolFactory} from '@pixi-essentials/object-pool'
-import {Brush} from '@/Brush'
-import {PointerEvent} from '@/PointerEvent'
-import {lerp} from '@/lerp'
-import {distance} from '@/distance'
+import {Brush} from './Brush'
+import {PointerEvent} from './PointerEvent'
+import {distance, lerp} from '@/math'
 
 export class Stroke extends PIXI.Container {
   private readonly STAMP_LIMIT = 1024
@@ -94,7 +92,7 @@ export class Stroke extends PIXI.Container {
     this.spriteObjectPool.releaseArray(this.live.removeChildren())
   }
 
-  public destroy(_options?: IDestroyOptions | boolean): void {
+  public destroy(_options?: PIXI.IDestroyOptions | boolean): void {
     this.cleanup()
     super.destroy(_options)
   }

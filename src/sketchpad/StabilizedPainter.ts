@@ -1,8 +1,7 @@
-import {Stroke} from '@/Stroke'
-import {PointerEvent} from '@/PointerEvent'
-import {StabilizedPainterConfig} from '@/StabilizedPainterConfig'
-import {lerp} from '@/lerp'
-import {clamp} from '@/clamp'
+import {Stroke} from './Stroke'
+import {PointerEvent} from './PointerEvent'
+import {StabilizedPainterConfig} from './StabilizedPainterConfig'
+import {lerp, clamp} from '@/math'
 
 export class StabilizedPainter {
   private readonly length: number

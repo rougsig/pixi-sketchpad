@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js'
 import {Story} from '@ladle/react'
 import {useEffect, useMemo, useRef} from 'react'
-import {Sketchpad} from '@/Sketchpad'
+import {Sketchpad} from './Sketchpad'
 
 export const Example: Story = () => {
   const pixiContainer = useRef<HTMLDivElement>(null)

@@ -1,5 +1,4 @@
 import * as PIXI from 'pixi.js'
-import {FederatedPointerEvent} from 'pixi.js'
 
 export class Cursor extends PIXI.Container {
   private readonly gfx = new PIXI.Graphics()
@@ -12,7 +11,7 @@ export class Cursor extends PIXI.Container {
     this.onglobalpointermove = this.handlePointerMove
   }
 
-  public handlePointerMove(e: FederatedPointerEvent): void {
+  public handlePointerMove(e: PIXI.FederatedPointerEvent): void {
     if (!this.visible) return
     this.position.set(e.globalX, e.globalY)
   }

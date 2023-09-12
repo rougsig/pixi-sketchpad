@@ -1,9 +1,9 @@
 import * as PIXI from 'pixi.js'
 import {Cursor} from './Cursor'
-import {Stroke} from '@/Stroke'
-import {Brush} from '@/Brush'
-import {PointerEvent} from '@/PointerEvent'
-import {StabilizedPainter} from '@/StabilizedPainter'
+import {Stroke} from './Stroke'
+import {Brush} from './Brush'
+import {PointerEvent} from './PointerEvent'
+import {StabilizedPainter} from './StabilizedPainter'
 
 export class Sketchpad {
   private painter: StabilizedPainter | null = null

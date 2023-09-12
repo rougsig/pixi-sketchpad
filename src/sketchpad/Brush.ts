@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js'
-import {BrushTextureFactory} from '@/BrushTextureFactory'
-import {BrushConfig} from '@/BrushConfig'
+import {BrushTextureFactory} from './BrushTextureFactory'
+import {BrushConfig} from './BrushConfig'
 
 export class Brush {
   private readonly textureFactory: BrushTextureFactory
