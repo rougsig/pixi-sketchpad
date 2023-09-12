@@ -40,7 +40,7 @@ export class Sketchpad {
     if (this.stroke != null) this.destroyPainter()
     this.stroke = new Stroke(this.brush, 'red', this.app.renderer as PIXI.Renderer)
     this.app.stage.addChild(this.stroke)
-    this.painter = new StabilizedPainter(this.stroke, {length: 5, weight: 0, catchUp: true})
+    this.painter = new StabilizedPainter(this.stroke, {length: 5, weight: 0.5, catchUp: true})
     this.painter.down(e)
   }
 
