@@ -8,9 +8,9 @@ dependencies:
   '@pixi-essentials/object-pool':
     specifier: ^1.0.1
     version: 1.0.1(@pixi/settings@7.2.4)(@pixi/ticker@7.2.4)
-  deep-object-diff:
-    specifier: ^1.1.9
-    version: 1.1.9
+  '@pixi-essentials/transformer':
+    specifier: ^3.0.2
+    version: 3.0.2(@pixi/core@7.2.4)(@pixi/display@7.2.4)(@pixi/events@7.2.4)(@pixi/graphics@7.2.4)(@pixi/math@7.2.4)(@pixi/settings@7.2.4)(@pixi/ticker@7.2.4)
   pixi.js:
     specifier: ^7.2.4
     version: 7.2.4(@pixi/utils@7.2.4)
@@ -696,6 +696,14 @@ packages:
       fastq: 1.15.0
     dev: true
 
+  /@pixi-essentials/bounds@3.0.0(@pixi/math@7.2.4):
+    resolution: {integrity: sha512-AHWL8J1pc7tKB9qFW/x909/NZkLLCBKzeDWiwHVOLyCAiSVYHU+dACAohKNfDHLf1rgTgM5R7JHRQR6SA1gG/g==}
+    peerDependencies:
+      '@pixi/math': ^7.0.0
+    dependencies:
+      '@pixi/math': 7.2.4
+    dev: false
+
   /@pixi-essentials/object-pool@1.0.1(@pixi/settings@7.2.4)(@pixi/ticker@7.2.4):
     resolution: {integrity: sha512-8/rwSi+yOjINQcAsviRaTcWRybmR6SVQnYpMXSgGzoMobv4jNSvS5HULlskAMXWh/Q44XCxY0Hi9jwv5gaw6bQ==}
     peerDependencies:
@@ -704,6 +712,27 @@ packages:
     dependencies:
       '@pixi/settings': 7.2.4
       '@pixi/ticker': 7.2.4
+    dev: false
+
+  /@pixi-essentials/transformer@3.0.2(@pixi/core@7.2.4)(@pixi/display@7.2.4)(@pixi/events@7.2.4)(@pixi/graphics@7.2.4)(@pixi/math@7.2.4)(@pixi/settings@7.2.4)(@pixi/ticker@7.2.4):
+    resolution: {integrity: sha512-IT3hTnX8IfKNTSLPsgbGCIyCW5Ls/ohZ7U97f6CsZwiBYNzdxtR60SIR2Sw/Cu1Wt4VAo51oYjitQgXNDynrQw==}
+    peerDependencies:
+      '@pixi/core': ^7.0.0
+      '@pixi/display': ^7.0.0
+      '@pixi/events': ^7.0.0
+      '@pixi/graphics': ^7.0.0
+      '@pixi/math': ^7.0.0
+    dependencies:
+      '@pixi-essentials/bounds': 3.0.0(@pixi/math@7.2.4)
+      '@pixi-essentials/object-pool': 1.0.1(@pixi/settings@7.2.4)(@pixi/ticker@7.2.4)
+      '@pixi/core': 7.2.4
+      '@pixi/display': 7.2.4(@pixi/core@7.2.4)
+      '@pixi/events': 7.2.4(@pixi/core@7.2.4)(@pixi/display@7.2.4)
+      '@pixi/graphics': 7.2.4(@pixi/core@7.2.4)(@pixi/display@7.2.4)(@pixi/sprite@7.2.4)
+      '@pixi/math': 7.2.4
+    transitivePeerDependencies:
+      - '@pixi/settings'
+      - '@pixi/ticker'
     dev: false
 
   /@pixi/accessibility@7.2.4(@pixi/core@7.2.4)(@pixi/display@7.2.4)(@pixi/events@7.2.4):
@@ -1679,10 +1708,6 @@ packages:
   /deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
     dev: true
-
-  /deep-object-diff@1.1.9:
-    resolution: {integrity: sha512-Rn+RuwkmkDwCi2/oXOFS9Gsr5lJZu/yTGpK7wAaAIE75CC+LCGEZHpY6VQJa/RoJcrmaA/docWJZvYohlNkWPA==}
-    dev: false
 
   /default-browser-id@3.0.0:
     resolution: {integrity: sha512-OZ1y3y0SqSICtE8DE4S8YOE9UZOJ8wO16fKWVP5J1Qz42kV9jcnMVFrEE/noXb/ss3Q4pZIH79kxofzyNNtUNA==}
